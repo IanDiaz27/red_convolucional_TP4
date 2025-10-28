@@ -12,3 +12,14 @@ model.add(layers.Flatten())
 model.add(layers.Dense(256, activation=act))
 model.add(layers.Dense(128, activation=act))
 model.add(layers.Dense(8, activation="softmax"))
+
+esperados=[
+    [1,0,0,0,0,0,0,0],
+    [0,1,0,0,0,0,0,0],
+    [0,0,1,0,0,0,0,0],
+    [0,0,0,1,0,0,0,0],
+    [0,0,0,0,1,0,0,0],
+    [0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,0,1,0],
+    [0,0,0,0,0,0,0,1]
+    ]
