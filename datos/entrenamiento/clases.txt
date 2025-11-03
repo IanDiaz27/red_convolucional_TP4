@@ -1,0 +1,8 @@
+1 - Aves
+2 - Carpinchos
+3 - Elefantes
+4 - Monos
+5 - Suricatas
+6 - Perros
+7 - Sapos
+

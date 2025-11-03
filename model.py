@@ -3,42 +3,25 @@ import tensorflow as tf
 import numpy as np
 
 
-def crearRed(cant_clases, seed=11):
+def crearRed(ancho_image, alto_imagen, cant_clases, seed=11):
     utils.set_random_seed(seed)
 
-    act="relu"
-
-    model = models.Sequential()
-    model.add(layers.Input(shape=(200, 200, 3)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=32))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=64))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=128))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=256))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=512))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-    model.add(layers.Conv2D(kernel_size=(3,3), padding="same", strides=(1,1), filters=64))
-    model.add(layers.MaxPooling2D(pool_size=(2,2)))
-
-
-    model.add(layers.Dropout(0.2))
-
-    model.add(layers.Flatten())
-
-    model.add(layers.Dense(256, activation=act))
-    model.add(layers.Dropout(0.2))
-    # model.add(layers.Dense(128, activation=act))
-    # model.add(layers.Dense(64, activation=act))
-    model.add(layers.Dense(cant_clases, activation="softmax"))
+    model = keras.Sequential(
+        [
+            layers.Input(shape=(ancho_image, alto_imagen, 3)),
+            # data_augmentation,
+            layers.Conv2D(32, 3, activation="relu"),
+            layers.MaxPooling2D(),
+            layers.Conv2D(64, 3, activation="relu"),
+            layers.MaxPooling2D(),
+            layers.Conv2D(128, 3, activation="relu"),
+            layers.MaxPooling2D(),
+            layers.Flatten(),
+            layers.Dense(128, activation="relu"),
+            layers.Dropout(0.5),
+            layers.Dense(cant_clases, activation="softmax"),
+        ]
+    )
 
     return model
 
