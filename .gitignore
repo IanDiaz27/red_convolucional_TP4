@@ -1,6 +1,4 @@
-img
-
-img_
+*.keras
 .venv
 venv
 __pycache__
