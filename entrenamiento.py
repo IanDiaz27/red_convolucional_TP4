@@ -4,16 +4,15 @@ import time
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from model import crearRed, cargarImagenesEntrenamiento
-
+from model import crearRed, cargarImagenesEntrenamiento, cargarImagenesClasificacion, predecir
 
 num_prueba = input("Número de Prueba: ")
-epocas = 100
+epocas = 40
 batch_size = 32
-n = 0.001
+n = 0.0005
 seed = 11
-loss="sparse_categorical_crossentropy"
-# loss="categorical_crossentropy"
+
+loss="categorical_crossentropy"
 # loss="binary_crossentropy"
 
 ds_entrenamiento, ds_validacion, clases = cargarImagenesEntrenamiento(
@@ -31,8 +30,6 @@ print("Clases:", clases)
 # print("devices:", tf.config.get_visible_devices())
 tf.config.experimental.enable_op_determinism()
 
-
-
 model = crearRed(cant_salidas=cantClases, seed=seed)
 opt = optimizers.Adam(learning_rate = n)
 model.compile(loss = loss, optimizer = opt, metrics = ['accuracy'])
@@ -43,7 +40,7 @@ historia = model.fit(ds_entrenamiento,
                 validation_data=ds_validacion
             )
 fin = time.perf_counter()
-# model.save(f"punto-1.keras")
+model.save(f"{num_prueba}_{epocas}_{batch_size}_{n}_{loss}.keras")
 
 print(f"tiempo consumido: {fin - inicio}")
 
@@ -66,5 +63,8 @@ plt.legend(['accuracy', 'val_accuracy'],loc="upper right")
 plt.savefig(f"resultados/prueba-{num_prueba}_{epocas}_{batch_size}_{n}_{loss}_accuracy.png")
 
 
-
+# probar clase 1
+for clase in range(cantClases):
+    imgs, paths = cargarImagenesClasificacion(f"datos/test/{clase+1}", alto=200, ancho=200, normalizar=True)
+    predecir(model, imgs, paths, clase)
 
