@@ -1,7 +1,7 @@
 from keras import models, preprocessing, layers, utils
 import tensorflow as tf
 import numpy as np
-from pathlib import Path
+import pathlib
 
 
 
@@ -11,9 +11,9 @@ def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
     augment = tf.keras.Sequential(
         [
             layers.RandomFlip("horizontal", seed=seed),
-            layers.RandomRotation(0.10, seed=seed), 
-            layers.RandomZoom(0.10, seed=seed), 
-            layers.RandomContrast(0.10, seed=seed), 
+            layers.RandomRotation(0.30, seed=seed), 
+            layers.RandomZoom(0.15, seed=seed), 
+            layers.RandomContrast(0.5, seed=seed), 
         ],
         name="data_augmentation"
     )
@@ -66,7 +66,8 @@ def cargarImagenesEntrenamiento(
         alto=200, ancho=200, 
         seed=11, batch_size=32,
         normalizar=True,
-        one_hot=True ):
+        one_hot=True,
+        validation_split=0.2):
     
     ds_entrenamiento, ds_valicacion = preprocessing.image_dataset_from_directory(
         path,
@@ -76,7 +77,7 @@ def cargarImagenesEntrenamiento(
         image_size=(alto,ancho),
         shuffle=True,
         seed=seed,
-        validation_split=0.20,
+        validation_split=validation_split,
         subset="both",
         batch_size=batch_size
     )
@@ -107,37 +108,39 @@ def cargarImagenesEntrenamiento(
 
 
 
-# carga una imagen 
-def cargarImagen(path, alto=200, ancho=200, normalizar=True):
-    img = tf.io.read_file(path)
-    img = tf.image.decode_image(img, channels=3, expand_animations=False)
-    img = tf.image.resize(img, [alto, ancho])
+def cargarImagenesPrediccion(
+        path="datos/test",
+        alto=200,
+        ancho=200,
+        batch_size=32,
+        normalizar=True):
+
+
+    path_obj = pathlib.Path(path)
+    paths = sorted([str(p) for p in path_obj.rglob("*") if p.is_file()])
+
+
+    ds_pred = preprocessing.image_dataset_from_directory(
+        directory=path,
+        labels=None,
+        label_mode=None,
+        color_mode="rgb",
+        image_size=(alto, ancho),
+        shuffle=False,
+        batch_size=batch_size,
+        interpolation="bilinear"
+    )
+
     if normalizar:
-        img = tf.image.convert_image_dtype(img, tf.float32)
+        def _norm(imgs):
+            return tf.image.convert_image_dtype(imgs, tf.float32)
 
+        ds_pred = ds_pred.map(lambda imgs: _norm(imgs),
+                              num_parallel_calls=tf.data.AUTOTUNE)
 
-    return img
+    # ds_pred = ds_pred.prefetch(tf.data.AUTOTUNE)
 
-
-def cargarImagenesClasificacion(
-    path,
-    alto= 200,
-    ancho= 200,
-    normalizar= True,
-    ):
-    base = Path(path)
-
-    paths = [p for p in base.iterdir() if p.is_file()]
-
-    imgs = []
-    for p in paths:
-        img = cargarImagen(str(p), alto, ancho, normalizar)
-        imgs.append(img)
-
-    imgs_tensor = tf.stack(imgs, axis=0)
-
-    return imgs_tensor, paths
-
+    return ds_pred, paths
 
 
 def predecir(model, imgs, paths, clase_esperada, mostrar_errores=False):
