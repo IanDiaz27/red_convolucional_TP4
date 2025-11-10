@@ -8,7 +8,13 @@ import pathlib
 def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
     utils.set_random_seed(seed)
 
-    augment = tf.keras.Sequential(
+    act_conv2D = None
+    act_dense = 'relu'
+    padding_pooling = 'same'
+    padding_conv2D = 'same'
+
+    # capas de modificación de datos aleatoria
+    augment = models.Sequential(
         [
             layers.RandomFlip("horizontal", seed=seed),
             layers.RandomRotation(0.30, seed=seed), 
@@ -18,37 +24,29 @@ def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
         name="data_augmentation"
     )
 
-
-    act_conv2D = None
-    act_dense = 'relu'
-    padding_pooling = 'same'
-    padding_conv2D = 'same'
-
-    model = models.Sequential(
+    # Capas de convolución
+    capas_convolutivas = models.Sequential(
         [
-            # Capa de entrada
-            layers.Input(shape=input_shape),
-
-            augment,
-            
-            # Capas de convolución
-            layers.Conv2D(32, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            layers.BatchNormalization(),
-            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
-
             layers.Conv2D(64, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
             layers.BatchNormalization(),
             layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
-            layers.Conv2D(128, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            layers.BatchNormalization(),
-            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+            # layers.Conv2D(64, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            # layers.BatchNormalization(),
+            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
-            layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            layers.BatchNormalization(),
-            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+            # layers.Conv2D(128, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            # layers.BatchNormalization(),
+            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
+            # layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            # layers.BatchNormalization(),
+            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+        ], name="capas_convolutivas",
+    )
 
+    capas_densas = models.Sequential(
+        [
             layers.Flatten(),
 
             layers.Dense(128, activation=act_dense),
@@ -56,6 +54,16 @@ def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
 
             # Capa de Salida
             layers.Dense(cant_salidas, activation="softmax"),
+        ], name='capas_densas',
+    )
+
+    model = models.Sequential(
+        [
+            # Capa de entrada
+            layers.Input(shape=input_shape),
+            augment,
+            capas_convolutivas,
+            capas_densas
         ]
     )
 
@@ -146,24 +154,32 @@ def cargarImagenesPrediccion(
 def predecir(model, imgs, paths, clase_esperada, mostrar_errores=False):
     preds = model.predict(imgs, batch_size=32)
 
+
+
     indices = np.argmax(preds, axis=1)
     probs = np.max(preds, axis=1) 
 
 
-    if mostrar_errores:
-        print(f"Imagen\t\t\tClase\tProb") 
+
+    imprimir_detalle(f"Imagen\t\t\t\tClase\tProb\t\t\t\tOk") 
     cant_ok = 0
     cant_error = 0
     cant_total = 0
     for ruta, idx, prob in zip(paths, indices, probs if 'probs' in locals() else [None]*len(indices)):
         cant_total += 1
-        if idx == clase_esperada:
+        ok = idx == clase_esperada
+        if ok:
             cant_ok +=1
         else:
             cant_error +=1
-        if mostrar_errores:
-            print(f"{ruta}\t{idx+1}\t{prob}")
+        imprimir_detalle(f"{ruta}\t{idx+1}\t{prob}\t{ok}")
 
-    print(f"**** Clase: {clase_esperada+1}:\t Ok:{cant_ok}\tError: {cant_error}\tPorcentaje Aciertos: {round((cant_ok / cant_total) * 100)} %  *****")
+    imprimir_resultado(f"Clase: {clase_esperada+1}:\t Ok:{cant_ok}\tError: {cant_error}\tPorcentaje Aciertos: {round((cant_ok / cant_total) * 100)}%")
 
+
+def imprimir_detalle(str, fname="resultados/detalle.txt"):
+    print(str, file=open(fname, 'a')) 
+
+def imprimir_resultado(str, fname="resultados/resultados.txt"):
+    print(str, file=open(fname, 'a')) 
 

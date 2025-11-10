@@ -4,9 +4,9 @@ import time
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from model import crearRed, cargarImagenesEntrenamiento, predecir, cargarImagenesPrediccion
+from model import crearRed, cargarImagenesEntrenamiento, predecir, cargarImagenesPrediccion, imprimir_detalle, imprimir_resultado
 
-# tf.config.experimental.enable_op_determinism()
+tf.config.experimental.enable_op_determinism()
 
 
 num_prueba = input("Número de Prueba: ")
@@ -45,8 +45,10 @@ early_stop = callbacks.EarlyStopping(
 )
 
 
-
+imprimir_resultado(f"\n\n******************* Prueba {num_prueba} *************", "resultados/entrenamiento.txt")
 model = crearRed(cant_salidas=cantClases, seed=seed)
+imprimir_resultado(model)
+
 opt = optimizers.Adam(learning_rate = n)
 model.compile(loss = loss, optimizer = opt, metrics = ['accuracy'])
 
@@ -59,7 +61,13 @@ historia = model.fit(ds_entrenamiento,
 fin = time.perf_counter()
 model.save(f"{num_prueba}_{epocas}_{batch_size}_{n}_{loss}.keras")
 
-print(f"tiempo consumido: {fin - inicio}")
+res_loss = historia.history['loss'][-1]
+res_accuracy = historia.history['accuracy'][-1]
+res_val_loss = historia.history['val_loss'][-1]
+res_val_accuracy = historia.history['val_accuracy'][-1] 
+
+imprimir_resultado(f"tiempo:{fin - inicio}\nval_loss:{res_val_loss}\tloss:{res_loss}\tval_accuracy:{res_val_accuracy}\taccuracy:{res_accuracy}", "resultados/entrenamiento.txt")
+
 
 plt.title(f"Loss - Epocas: {epocas} - Batch Size: {batch_size} - n: {n}")
 plt.xlabel("Épocas")
@@ -81,6 +89,9 @@ plt.savefig(f"resultados/prueba-{num_prueba}_{epocas}_{batch_size}_{n}_{loss}_ac
 
 
 # probar clase 1
+imprimir_resultado(f"\n\n******************* Prueba {num_prueba} *************")
+imprimir_detalle(f"\n\n******************* Prueba {num_prueba} *************")
+imprimir_detalle(f"Epocas: {epocas}\tn:{n}\tbatch_size:{batch_size}\tloss:{loss}")
 for clase in range(cantClases):
     imgs, paths = cargarImagenesPrediccion(f"datos/test/{clase+1}", alto=200, ancho=200, normalizar=True)
     predecir(model, imgs, paths, clase, False)
