@@ -8,32 +8,51 @@ from pathlib import Path
 def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
     utils.set_random_seed(seed)
 
+    augment = tf.keras.Sequential(
+        [
+            layers.RandomFlip("horizontal", seed=seed),
+            layers.RandomRotation(0.10, seed=seed), 
+            layers.RandomZoom(0.10, seed=seed), 
+            layers.RandomContrast(0.10, seed=seed), 
+        ],
+        name="data_augmentation"
+    )
+
+
+    act_conv2D = None
+    act_dense = 'relu'
+    padding_pooling = 'same'
+    padding_conv2D = 'same'
+
     model = models.Sequential(
         [
             # Capa de entrada
             layers.Input(shape=input_shape),
+
+            augment,
             
             # Capas de convolución
-            layers.Conv2D(32, kernel_size=(3,3), strides=(1,1), padding="same"),
-            layers.MaxPooling2D(pool_size=(2,2), padding="same"),
+            layers.Conv2D(32, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
-            layers.Conv2D(64, kernel_size=(5,5), strides=(1,1), padding="same"),
-            layers.MaxPooling2D(pool_size=(2,2), padding="same"),
+            layers.Conv2D(64, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
-            layers.Conv2D(128, kernel_size=(7,7), strides=(1,1), padding="same"),
-            layers.MaxPooling2D(pool_size=(2,2), padding="same"),
+            layers.Conv2D(128, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
 
-            layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding="same"),
-            layers.MaxPooling2D(pool_size=(2,2), padding="same"),
+            layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+
 
             layers.Flatten(),
 
-            layers.Dense(128, activation="relu"),
-            layers.Dense(64, activation="relu"),
-            layers.Dense(32, activation="relu"),
-
-            # 
-            # layers.Dropout(0.5),
+            layers.Dense(128, activation=act_dense),
+            layers.Dense(64, activation=act_dense),
 
             # Capa de Salida
             layers.Dense(cant_salidas, activation="softmax"),
@@ -121,17 +140,15 @@ def cargarImagenesClasificacion(
 
 
 
-def predecir(model, imgs, paths, clase_esperada):
-    # predecir (devuelve array de predicciones para cada imagen)
+def predecir(model, imgs, paths, clase_esperada, mostrar_errores=False):
     preds = model.predict(imgs, batch_size=32)
 
-    # interpretar salidas (ejemplos)
-    if preds.ndim == 2 and preds.shape[1] > 1:
-        indices = np.argmax(preds, axis=1)
-        probs = np.max(preds, axis=1) 
+    indices = np.argmax(preds, axis=1)
+    probs = np.max(preds, axis=1) 
 
 
-    print(f"Imagen\t\t\tClase\tProb") 
+    if mostrar_errores:
+        print(f"Imagen\t\t\tClase\tProb") 
     cant_ok = 0
     cant_error = 0
     cant_total = 0
@@ -141,44 +158,9 @@ def predecir(model, imgs, paths, clase_esperada):
             cant_ok +=1
         else:
             cant_error +=1
-        print(f"{ruta}\t{idx+1}\t{prob}")
+        if mostrar_errores:
+            print(f"{ruta}\t{idx+1}\t{prob}")
 
-    print(f"****  Ok:{cant_ok} - Error: {cant_error} - Porcentaje Aciertos: {round((cant_ok / cant_total) * 100, 2)} %  *****")
+    print(f"**** Clase: {clase_esperada+1}:\t Ok:{cant_ok}\tError: {cant_error}\tPorcentaje Aciertos: {round((cant_ok / cant_total) * 100)} %  *****")
 
 
-def cargarImagenesPrediccion(
-        path="datos/test",
-        alto=200, ancho=200,
-        batch_size=32,
-        normalizar=True,
-        devolver_rutas=True,
-    ):
-    # label_mode="none" si el directorio sólo contiene imágenes sin subcarpetas de clase
-    ds_pred, info = preprocessing.image_dataset_from_directory(
-        path,
-        labels= None,
-        label_mode= None,
-        color_mode="rgb",
-        image_size=(alto, ancho),
-        shuffle=False,
-        seed=0,
-        batch_size=batch_size
-    ), None
-
-    if normalizar:
-        def _normalizar(imgs, labels=None):
-            imgs = tf.image.convert_image_dtype(imgs, tf.float32)
-            return (imgs, labels) if labels is not None else imgs
-        ds_pred = ds_pred.map(lambda imgs: _normalizar(imgs), num_parallel_calls=tf.data.AUTOTUNE)
-
-    # Obtener rutas de archivos si se solicita (útil para mapear predicciones)
-    path_obj = pathlib.Path(path)
-    # Si hay subcarpetas de clase, tomamos todas las imágenes recursivamente
-    patrones = ["**/*.jpg", "**/*.jpeg", "**/*.png", "**/*.bmp"]
-    archivos = []
-    for p in patrones:
-        archivos += sorted([str(pth) for pth in path_obj.glob(p)])
-    paths = archivos
-
-    ds_pred = ds_pred.prefetch(tf.data.AUTOTUNE)
-    return ds_pred, paths

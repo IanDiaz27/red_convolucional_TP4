@@ -3,13 +3,14 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from tensorflow.keras.callbacks import LearningRateScheduler, EarlyStopping
 
 from model import crearRed, cargarImagenesEntrenamiento, cargarImagenesClasificacion, predecir
 
 num_prueba = input("Número de Prueba: ")
-epocas = 40
+epocas = 100
 batch_size = 32
-n = 0.0005
+n = 0.001
 seed = 11
 
 loss="categorical_crossentropy"
@@ -24,6 +25,22 @@ cantClases = len(clases)
 print("Clases:", clases)
 
 
+# ajustar n
+def scheduler(epoch, lr):
+    if epoch > 0 and epoch % 10 == 0:
+        return lr * 0.5
+    return lr
+
+early_stop = EarlyStopping(
+    monitor='val_accuracy', 
+    patience=30, 
+    restore_best_weights=True,
+    verbose=1
+)
+
+
+lr_callback = LearningRateScheduler(scheduler, verbose=1)
+
 # inicio de entrenamiento
 
 # tf.config.set_visible_devices([], device_type='GPU')
@@ -37,8 +54,9 @@ model.compile(loss = loss, optimizer = opt, metrics = ['accuracy'])
 inicio = time.perf_counter()
 historia = model.fit(ds_entrenamiento, 
                 epochs = epocas,
-                validation_data=ds_validacion
-            )
+                validation_data=ds_validacion,
+                callbacks=[lr_callback, early_stop],
+        )
 fin = time.perf_counter()
 model.save(f"{num_prueba}_{epocas}_{batch_size}_{n}_{loss}.keras")
 
