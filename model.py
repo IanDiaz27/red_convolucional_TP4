@@ -10,60 +10,53 @@ def crearRed(cant_salidas, input_shape=(200,200,3), seed=11):
 
     act_conv2D = None
     act_dense = 'relu'
-    padding_pooling = 'same'
+    padding_pooling = 'valid'
     padding_conv2D = 'same'
 
     # capas de modificación de datos aleatoria
     augment = models.Sequential(
         [
             layers.RandomFlip("horizontal", seed=seed),
-            layers.RandomRotation(0.30, seed=seed), 
+            layers.RandomRotation(0.15, seed=seed), 
             layers.RandomZoom(0.15, seed=seed), 
-            layers.RandomContrast(0.5, seed=seed), 
+            layers.RandomContrast(0.10, seed=seed), 
         ],
         name="data_augmentation"
     )
 
-    # Capas de convolución
-    capas_convolutivas = models.Sequential(
-        [
-            layers.Conv2D(64, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            layers.BatchNormalization(),
-            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
-
-            # layers.Conv2D(64, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            # layers.BatchNormalization(),
-            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
-
-            # layers.Conv2D(128, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            # layers.BatchNormalization(),
-            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
-
-            # layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
-            # layers.BatchNormalization(),
-            # layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
-        ], name="capas_convolutivas",
-    )
-
-    capas_densas = models.Sequential(
-        [
-            layers.Flatten(),
-
-            layers.Dense(128, activation=act_dense),
-            layers.Dense(64, activation=act_dense),
-
-            # Capa de Salida
-            layers.Dense(cant_salidas, activation="softmax"),
-        ], name='capas_densas',
-    )
 
     model = models.Sequential(
         [
             # Capa de entrada
             layers.Input(shape=input_shape),
-            augment,
-            capas_convolutivas,
-            capas_densas
+            # augment,
+
+            # capas convolutivas
+            layers.Conv2D(32, kernel_size=(7,7), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+
+            layers.Conv2D(64, kernel_size=(5,5), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+
+            layers.Conv2D(128, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+
+            layers.Conv2D(256, kernel_size=(3,3), strides=(1,1), padding=padding_conv2D, activation=act_conv2D),
+            layers.BatchNormalization(),
+            layers.MaxPooling2D(pool_size=(2,2), padding=padding_pooling),
+
+
+            # capas densas
+            layers.Flatten(),
+
+            layers.Dense(256, activation=act_dense),
+            layers.Dense(128, activation=act_dense),
+
+            # Capa de Salida
+            layers.Dense(cant_salidas, activation="softmax"),
         ]
     )
 
@@ -174,7 +167,7 @@ def predecir(model, imgs, paths, clase_esperada, mostrar_errores=False):
             cant_error +=1
         imprimir_detalle(f"{ruta}\t{idx+1}\t{prob}\t{ok}")
 
-    imprimir_resultado(f"Clase: {clase_esperada+1}:\t Ok:{cant_ok}\tError: {cant_error}\tPorcentaje Aciertos: {round((cant_ok / cant_total) * 100)}%")
+    imprimir_resultado(f"Clase {clase_esperada+1}: Ok: {cant_ok} ({round((cant_ok / cant_total) * 100)}%)\tError: {cant_error} ({round((cant_error / cant_total) * 100)}%) ")
 
 
 def imprimir_detalle(str, fname="resultados/detalle.txt"):
@@ -183,3 +176,24 @@ def imprimir_detalle(str, fname="resultados/detalle.txt"):
 def imprimir_resultado(str, fname="resultados/resultados.txt"):
     print(str, file=open(fname, 'a')) 
 
+def obtenerArquitectura(model):
+    arquitectura_info = ""
+    
+    for i, capa in enumerate(model.layers):
+        capa_info = f"{i + 1}: {capa.__class__.__name__}"
+
+       
+        if isinstance(capa, layers.Conv2D):
+            capa_info += f" - Filtros: {capa.filters} Kernel: {capa.kernel_size}, Stride: {capa.strides}, Activ: {capa.activation.__name__ if capa.activation else 'None'}"
+        elif isinstance(capa, layers.MaxPooling2D):
+            capa_info += f" - Pool Size: {capa.pool_size}, Padding: {capa.padding}"
+        elif isinstance(capa, layers.BatchNormalization):
+            capa_info += " - Normalización"
+        elif isinstance(capa, layers.Dense):
+            capa_info += f" - Unidades: {capa.units}, Activ: {capa.activation.__name__ if capa.activation else 'None'}"
+        elif isinstance(capa, layers.InputLayer):
+            capa_info += f" - Input Shape: {capa.input_shape}"
+
+        arquitectura_info += capa_info + "\n"
+
+    return arquitectura_info.strip()  # Elimina el último salto de línea

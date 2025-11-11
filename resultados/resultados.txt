@@ -1,52 +1,36 @@
 
 
-******************* Prueba 1 *************
-Clase: 1:	 Ok:23	Error: 7	Porcentaje Aciertos: 77%
-Clase: 2:	 Ok:8	Error: 22	Porcentaje Aciertos: 27%
-Clase: 3:	 Ok:22	Error: 8	Porcentaje Aciertos: 73%
-Clase: 4:	 Ok:9	Error: 20	Porcentaje Aciertos: 31%
-Clase: 5:	 Ok:10	Error: 20	Porcentaje Aciertos: 33%
-Clase: 6:	 Ok:10	Error: 20	Porcentaje Aciertos: 33%
-Clase: 7:	 Ok:13	Error: 17	Porcentaje Aciertos: 43%
+******************* Prueba 23 *************
+Arquitectura:
+1: Conv2D - Filtros: 32 Kernel: (7, 7), Stride: (1, 1), Activ: linear
+2: BatchNormalization - Normalización
+3: MaxPooling2D - Pool Size: (2, 2), Padding: valid
+4: Conv2D - Filtros: 64 Kernel: (5, 5), Stride: (1, 1), Activ: linear
+5: BatchNormalization - Normalización
+6: MaxPooling2D - Pool Size: (2, 2), Padding: valid
+7: Conv2D - Filtros: 128 Kernel: (3, 3), Stride: (1, 1), Activ: linear
+8: BatchNormalization - Normalización
+9: MaxPooling2D - Pool Size: (2, 2), Padding: valid
+10: Conv2D - Filtros: 256 Kernel: (3, 3), Stride: (1, 1), Activ: linear
+11: BatchNormalization - Normalización
+12: MaxPooling2D - Pool Size: (2, 2), Padding: valid
+13: Flatten
+14: Dense - Unidades: 256, Activ: relu
+15: Dense - Unidades: 128, Activ: relu
+16: Dense - Unidades: 7, Activ: softmax
 
+Entrenamiento:
+tiempo:       136.11727441699986
+val_loss:     1.8854966163635254
+loss:         0.005256310570985079
+val_accuracy: 0.6551724076271057
+accuracy:     1.0
 
-******************* Prueba 50 *************
-Clase: 1:	 Ok:17	Error: 13	Porcentaje Aciertos: 57%
-Clase: 2:	 Ok:8	Error: 22	Porcentaje Aciertos: 27%
-Clase: 3:	 Ok:19	Error: 11	Porcentaje Aciertos: 63%
-Clase: 4:	 Ok:11	Error: 18	Porcentaje Aciertos: 38%
-Clase: 5:	 Ok:7	Error: 23	Porcentaje Aciertos: 23%
-Clase: 6:	 Ok:9	Error: 21	Porcentaje Aciertos: 30%
-Clase: 7:	 Ok:17	Error: 13	Porcentaje Aciertos: 57%
-
-
-******************* Prueba 50 *************
-Clase: 1:	 Ok:21	Error: 9	Porcentaje Aciertos: 70%
-Clase: 2:	 Ok:23	Error: 7	Porcentaje Aciertos: 77%
-Clase: 3:	 Ok:22	Error: 8	Porcentaje Aciertos: 73%
-Clase: 4:	 Ok:4	Error: 25	Porcentaje Aciertos: 14%
-Clase: 5:	 Ok:12	Error: 18	Porcentaje Aciertos: 40%
-Clase: 6:	 Ok:23	Error: 7	Porcentaje Aciertos: 77%
-Clase: 7:	 Ok:22	Error: 8	Porcentaje Aciertos: 73%
-<Sequential name=sequential, built=True>
-
-
-******************* Prueba 51 *************
-Clase: 1:	 Ok:17	Error: 13	Porcentaje Aciertos: 57%
-Clase: 2:	 Ok:12	Error: 18	Porcentaje Aciertos: 40%
-Clase: 3:	 Ok:18	Error: 12	Porcentaje Aciertos: 60%
-Clase: 4:	 Ok:1	Error: 28	Porcentaje Aciertos: 3%
-Clase: 5:	 Ok:17	Error: 13	Porcentaje Aciertos: 57%
-Clase: 6:	 Ok:23	Error: 7	Porcentaje Aciertos: 77%
-Clase: 7:	 Ok:25	Error: 5	Porcentaje Aciertos: 83%
-<Sequential name=sequential, built=True>
-
-
-******************* Prueba 52 *************
-Clase: 1:	 Ok:2	Error: 28	Porcentaje Aciertos: 7%
-Clase: 2:	 Ok:0	Error: 30	Porcentaje Aciertos: 0%
-Clase: 3:	 Ok:2	Error: 28	Porcentaje Aciertos: 7%
-Clase: 4:	 Ok:0	Error: 29	Porcentaje Aciertos: 0%
-Clase: 5:	 Ok:30	Error: 0	Porcentaje Aciertos: 100%
-Clase: 6:	 Ok:0	Error: 30	Porcentaje Aciertos: 0%
-Clase: 7:	 Ok:0	Error: 30	Porcentaje Aciertos: 0%
+Prueba:
+Clase 1: Ok: 21 (70%)	Error: 9 (30%) 
+Clase 2: Ok: 20 (67%)	Error: 10 (33%) 
+Clase 3: Ok: 21 (70%)	Error: 9 (30%) 
+Clase 4: Ok: 12 (41%)	Error: 17 (59%) 
+Clase 5: Ok: 19 (63%)	Error: 11 (37%) 
+Clase 6: Ok: 18 (60%)	Error: 12 (40%) 
+Clase 7: Ok: 23 (77%)	Error: 7 (23%) 

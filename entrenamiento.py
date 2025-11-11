@@ -4,13 +4,13 @@ import time
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from model import crearRed, cargarImagenesEntrenamiento, predecir, cargarImagenesPrediccion, imprimir_detalle, imprimir_resultado
+from model import crearRed, cargarImagenesEntrenamiento, predecir, cargarImagenesPrediccion, imprimir_detalle, imprimir_resultado, obtenerArquitectura
 
 tf.config.experimental.enable_op_determinism()
 
 
 num_prueba = input("Número de Prueba: ")
-epocas = 100
+epocas = 40
 batch_size = 32
 n = 0.001
 seed = 11
@@ -37,17 +37,12 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
     min_lr=1e-6,             # LR mínimo permitido
     verbose=1)
 
-early_stop = callbacks.EarlyStopping(
-    monitor='val_accuracy', 
-    patience=30, 
-    restore_best_weights=True,
-    verbose=1
-)
 
-
-imprimir_resultado(f"\n\n******************* Prueba {num_prueba} *************", "resultados/entrenamiento.txt")
+imprimir_resultado(f"\n\n******************* Prueba {num_prueba} *************")
 model = crearRed(cant_salidas=cantClases, seed=seed)
-imprimir_resultado(model)
+imprimir_resultado("Arquitectura:")
+imprimir_resultado(obtenerArquitectura(model))
+
 
 opt = optimizers.Adam(learning_rate = n)
 model.compile(loss = loss, optimizer = opt, metrics = ['accuracy'])
@@ -66,7 +61,12 @@ res_accuracy = historia.history['accuracy'][-1]
 res_val_loss = historia.history['val_loss'][-1]
 res_val_accuracy = historia.history['val_accuracy'][-1] 
 
-imprimir_resultado(f"tiempo:{fin - inicio}\nval_loss:{res_val_loss}\tloss:{res_loss}\tval_accuracy:{res_val_accuracy}\taccuracy:{res_accuracy}", "resultados/entrenamiento.txt")
+imprimir_resultado("\nEntrenamiento:")
+imprimir_resultado(f"tiempo:       {fin - inicio}")
+imprimir_resultado(f"val_loss:     {res_val_loss}")
+imprimir_resultado(f"loss:         {res_loss}")
+imprimir_resultado(f"val_accuracy: {res_val_accuracy}")
+imprimir_resultado(f"accuracy:     {res_accuracy}")
 
 
 plt.title(f"Loss - Epocas: {epocas} - Batch Size: {batch_size} - n: {n}")
@@ -88,8 +88,7 @@ plt.legend(['accuracy', 'val_accuracy'],loc="upper right")
 plt.savefig(f"resultados/prueba-{num_prueba}_{epocas}_{batch_size}_{n}_{loss}_accuracy.png")
 
 
-# probar clase 1
-imprimir_resultado(f"\n\n******************* Prueba {num_prueba} *************")
+imprimir_resultado("\nPrueba:")
 imprimir_detalle(f"\n\n******************* Prueba {num_prueba} *************")
 imprimir_detalle(f"Epocas: {epocas}\tn:{n}\tbatch_size:{batch_size}\tloss:{loss}")
 for clase in range(cantClases):
